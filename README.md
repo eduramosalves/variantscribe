@@ -15,6 +15,30 @@ and is evaluated against **ClinVar expert-reviewed gold labels**.
 
 ---
 
+## Results
+
+BRCA1, evaluated against expert-reviewed ClinVar gold labels. The trivial baselines are the
+floor; the LLM rows are populated by `scripts/run_results.py` once an API key (and the
+retrieval/guideline indexes) are configured. Auto-generated — do not edit by hand.
+
+<!-- results-table:start -->
+| Classifier | Evidence | n | macro-F1 | 3-class acc | dangerous-err | ECE | $/1k |
+|---|---|---|---|---|---|---|---|
+| baseline | majority | 80 | 0.122 | 0.450 | 0.0% | — | $0.00 |
+| baseline | always-vus | 80 | 0.080 | 0.250 | 0.0% | — | $0.00 |
+| agent | none | — | — | — | — | — | — |
+| agent | retrieval | — | — | — | — | — | — |
+| graph | none | — | — | — | — | — | — |
+| graph | retrieval | — | — | — | — | — | — |
+| graph | retrieval+guidelines | — | — | — | — | — | — |
+<!-- results-table:end -->
+
+<!-- results-plot:start -->
+_Calibration plot pending — run with an API key to populate._
+<!-- results-plot:end -->
+
+---
+
 ## Why this exists
 
 Variant interpretation is the bottleneck in clinical genomics: labs carry backlogs of
@@ -93,9 +117,10 @@ PubMed), typed domain models, gold-set builder, eval-metrics harness, trivial ba
 concurrent batch, token/cost/latency telemetry), the **two-stage retrieval layer** (PubMed
 corpus → embeddings → LanceDB vector index → cross-encoder rerank), the **LangGraph
 multi-agent classifier**, a **GitHub Actions CI eval gate**, **calibration analysis** (ECE +
-reliability bins), and **visual guideline-PDF retrieval** (ColPali). 58 tests; everything is
-covered without torch or an API key (a dependency-free hashing embedder + a mocked LLM
-client + a synthetic PDF fixture).
+reliability bins), **visual guideline-PDF retrieval** (ColPali), and a **results-reporting
+harness** that publishes the eval table + calibration plot into this README. 63 tests;
+everything is covered without torch or an API key (a dependency-free hashing embedder + a
+mocked LLM client + a synthetic PDF fixture).
 
 ### Phase 3 — guideline-PDF (visual) retrieval + calibration
 
