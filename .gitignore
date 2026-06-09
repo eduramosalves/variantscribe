@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# Env / secrets
+.env
+.env.local
+
+# Data & artifacts (never commit raw API dumps, indices, or model caches)
+data/
+!data/.gitkeep
+*.lance/
+.lancedb/
+runs/
+*.parquet
+*.duckdb
+
+# Notebooks
+.ipynb_checkpoints/
+
+# OS
+.DS_Store

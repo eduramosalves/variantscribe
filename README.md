@@ -1,0 +1,119 @@
+# 🧬 VariantScribe
+
+**An agentic clinical variant interpretation copilot.** Given a genetic variant,
+VariantScribe drafts an [ACMG/AMP](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4544753/)
+pathogenicity classification — *Pathogenic → Benign* — backed by a cited evidence trail,
+and is evaluated against **ClinVar expert-reviewed gold labels**.
+
+> ⚕️ **Decision support, not diagnosis.** VariantScribe drafts a reviewable assessment for
+> a qualified molecular geneticist. It is a research/engineering portfolio project, not a
+> clinical device, and includes an explicit *abstain* path when evidence is insufficient.
+
+---
+
+## Why this exists
+
+Variant interpretation is the bottleneck in clinical genomics: labs carry backlogs of
+thousands of variants, each taking 30–60 min of manual literature and database review, and
+classifications drift as new evidence appears. VariantScribe drafts the criterion-by-criterion
+assessment a geneticist would assemble by hand — and, crucially, **measures its own accuracy
+against ground truth** so the quality is provable rather than asserted.
+
+## What makes it an *engineering* project (not an API wrapper)
+
+- **Real data, joined across sources** — ClinVar (variants + gold labels), gnomAD
+  (population frequency), PubMed (literature). No synthetic toy data.
+- **Ground-truth evaluation** — ClinVar's review-status *star rating* gives a trustworthy
+  gold set; the harness reports macro-F1, a **dangerous-error rate** (calling a pathogenic
+  variant benign), ordinal distance, abstention/coverage, and calibration.
+- **Retrieval that's measured, not assumed** — biomedical embeddings + cross-encoder
+  reranking, benchmarked against a dense-only baseline.
+- **Production patterns** — typed domain models, pluggable vector store, retrying
+  rate-limited API clients, JSONL run artifacts, and a CI eval gate that blocks metric
+  regressions.
+
+## HuggingFace tasks used
+
+Token Classification (biomedical NER) · Text Ranking (cross-encoder reranking) ·
+Feature Extraction (domain embeddings) · Summarization · Document QA + Visual Document
+Retrieval (guideline PDFs, *Phase 3*) · Zero-Shot Classification (query triage).
+
+## Architecture (Phase 1 spine)
+
+```
+            ┌────────── ingest/ ──────────┐
+ClinVar ───▶│ gold labels + variants      │
+gnomAD  ───▶│ population frequency         │──▶ retrieval/ (embed + rerank)
+PubMed  ───▶│ literature corpus            │            │
+            └─────────────────────────────┘            ▼
+                                              agent/ classifier ──▶ Classification
+                                                                         │
+                              ClinVar gold ──▶ eval/ (metrics) ◀─────────┘
+```
+
+Phases: **(1)** single-gene spine + baseline eval → **(2)** LangGraph multi-agent
+(one node per ACMG criterion) + Langfuse tracing + CI gate → **(3)** ColPali visual
+retrieval over guideline PDFs + calibration analysis + UI.
+
+## Tech stack
+
+`Python 3.11+` · `httpx` · `pydantic` · `LanceDB` (file-based vector store; pgvector swap-in
+planned) · `sentence-transformers` (MedCPT embeddings + cross-encoder) · `Anthropic` ·
+`scikit-learn` · `typer`. Managed with [`uv`](https://docs.astral.sh/uv/).
+
+## Quickstart
+
+```bash
+uv sync                                   # base deps (ingestion + eval)
+uv sync --extra retrieval --extra agent   # add ML + LLM deps
+cp .env.example .env                       # set NCBI email (required) + keys
+
+# Build a trustworthy gold set from ClinVar (≥2★ reviewed variants)
+uv run variantscribe build-gold --gene BRCA1 --min-stars 2
+
+# Build the literature retrieval index (hashing = no torch; medcpt = production)
+uv run variantscribe build-index --gene BRCA1 --embedder hashing --max-articles 400
+uv sync --extra medcpt        # then: --embedder medcpt for MedCPT encoders
+
+# Classify + evaluate, measuring the lift from evidence (needs an Anthropic key)
+uv run variantscribe evaluate --gene BRCA1 --limit 50 --evidence none
+uv run variantscribe evaluate --gene BRCA1 --limit 50 --evidence retrieval --no-rerank
+uv run variantscribe evaluate --gene BRCA1 --limit 50 --evidence retrieval   # + rerank
+```
+
+## Status
+
+🚧 **Phase 1 complete.** Done: data ingestion (ClinVar/gnomAD/PubMed), typed domain
+models, gold-set builder, eval-metrics harness, trivial baselines, the **single-agent LLM
+classifier** (Anthropic tool-use → structured ACMG output, abstain path, concurrent batch,
+token/cost/latency telemetry), and the **two-stage retrieval layer** — PubMed corpus →
+embeddings → LanceDB vector index → cross-encoder rerank, fed to the classifier as
+gene-filtered evidence. 26 tests; the retrieval pipeline and classifier are both covered
+without torch or an API key (a dependency-free hashing embedder + a mocked LLM client).
+
+**Retrieval design:** a pluggable `Embedder` (production: NCBI **MedCPT** asymmetric
+article/query encoders; fallback: deterministic hashing) and `Reranker` (MedCPT
+cross-encoder vs. a no-op ablation). Swapping LanceDB → pgvector is the planned Phase-2
+data-layer milestone. Retrieval quality is measured *downstream* — classification macro-F1
+with `--evidence none` vs `retrieval` vs `retrieval --no-rerank` — rather than via
+unlabelled IR metrics.
+
+Next (Phase 2): run the lift measurement with MedCPT + a real LLM key, then LangGraph
+multi-agent (one node per ACMG criterion) + Langfuse tracing + a CI eval gate.
+
+> **Honest caveat:** the no-evidence run is an LLM-only ablation on a heavily-documented
+> gene (BRCA1), so some apparent skill may reflect training-data familiarity with ClinVar.
+> The retrieval phase — and held-out / less-documented genes — separate genuine evidence
+> reasoning from recall. This is tracked explicitly rather than hidden.
+
+### Baselines to beat (BRCA1, 800 gold variants, live ClinVar)
+
+| Classifier | Macro-F1 |
+|------------|----------|
+| always-VUS | 0.080 |
+| majority (always Pathogenic) | 0.121 |
+| LLM agent (no evidence) | *run with an API key* |
+
+## License
+
+MIT © Eduardo Ramos Alves
