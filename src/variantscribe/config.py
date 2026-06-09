@@ -24,6 +24,11 @@ class Settings(BaseSettings):
     anthropic_api_key: str | None = None
     agent_model: str = "claude-sonnet-4-6"
 
+    # Langfuse tracing (optional — tracing is a no-op unless these are set).
+    langfuse_public_key: str | None = None
+    langfuse_secret_key: str | None = None
+    langfuse_host: str = "https://cloud.langfuse.com"
+
     # Retrieval models (HF hub ids). MedCPT uses asymmetric article/query encoders.
     embedding_model: str = "ncbi/MedCPT-Article-Encoder"
     query_embedding_model: str = "ncbi/MedCPT-Query-Encoder"

@@ -139,6 +139,7 @@ def evaluate_agent(
     evidence: str = typer.Option("none", "--evidence", help="none | pubmed | retrieval"),
     rerank: bool = typer.Option(True, "--rerank/--no-rerank", help="Cross-encoder rerank"),
     k: int = typer.Option(5, "--k", help="Evidence passages passed to the classifier"),
+    classifier: str = typer.Option("agent", "--classifier", help="agent | graph"),
     model: str | None = typer.Option(None, "--model", help="Override the agent model"),
     max_workers: int = typer.Option(4, "--max-workers"),
     seed: int = typer.Option(0, "--seed"),
@@ -147,6 +148,8 @@ def evaluate_agent(
     from variantscribe.agent.classifier import LLMClassifier, classify_batch
     from variantscribe.agent.evidence import pubmed_evidence, retrieval_evidence_fn
     from variantscribe.agent.telemetry import summarize_run
+    from variantscribe.agent.tracing import flush as flush_tracing
+    from variantscribe.agent.tracing import tracing_enabled
 
     path = _gold_path(gene)
     if not path.exists():
@@ -175,15 +178,28 @@ def evaluate_agent(
         console.print(f"[red]Unknown --evidence {evidence!r}[/] (none | pubmed | retrieval)")
         raise typer.Exit(1)
 
+    # `graph` is the LangGraph multi-agent classifier; it gathers evidence internally,
+    # so we hand the evidence_fn to it and pass None to classify_batch.
+    batch_evidence_fn = evidence_fn
     try:
-        classifier = LLMClassifier(model=model)
+        if classifier == "graph":
+            from variantscribe.agent.graph import GraphClassifier
+
+            clf = GraphClassifier(model=model, evidence_fn=evidence_fn)
+            batch_evidence_fn = None
+        elif classifier == "agent":
+            clf = LLMClassifier(model=model)
+        else:
+            console.print(f"[red]Unknown --classifier {classifier!r}[/] (agent | graph)")
+            raise typer.Exit(1)
     except RuntimeError as exc:
         console.print(f"[red]{exc}[/]")
         raise typer.Exit(1) from exc
 
+    trace_note = " [dim](langfuse tracing on)[/]" if tracing_enabled() else ""
     console.print(
         f"Classifying [cyan]{len(gold)}[/] {gene} variants with "
-        f"[cyan]{classifier.model}[/] (evidence: {evidence_label})…"
+        f"[cyan]{classifier}:{clf.model}[/] (evidence: {evidence_label}){trace_note}…"
     )
     with Progress(transient=True) as progress:
         task = progress.add_task("classifying", total=len(gold))
@@ -192,18 +208,18 @@ def evaluate_agent(
             progress.update(task, completed=done)
 
         preds = classify_batch(
-            classifier, gold, evidence_fn=evidence_fn, max_workers=max_workers, on_done=_tick
+            clf, gold, evidence_fn=batch_evidence_fn, max_workers=max_workers, on_done=_tick
         )
 
     settings.ensure_dirs()
-    tag = (model or classifier.model).replace("/", "-")
-    run_path = settings.runs_dir / f"agent_{tag}_{gene.upper()}.jsonl"
+    tag = f"{classifier}_{(model or clf.model)}".replace("/", "-")
+    run_path = settings.runs_dir / f"{tag}_{gene.upper()}.jsonl"
     write_predictions(preds, run_path)
 
     report = evaluate(build_eval_cases(gold, preds))
-    telem = summarize_run(preds, model=classifier.model)
+    telem = summarize_run(preds, model=clf.model)
 
-    console.print(f"\n[bold]Agent[/] [cyan]{classifier.model}[/] on [cyan]{gene}[/]:")
+    console.print(f"\n[bold]{classifier}[/] [cyan]{clf.model}[/] on [cyan]{gene}[/]:")
     for line in report.summary_lines():
         console.print("  " + line)
     console.print("  [dim]— cost/latency —[/]")
@@ -224,11 +240,12 @@ def evaluate_agent(
         for rng, n, acc in report.calibration:
             console.print(f"  {rng}: n={n}, acc={acc:.2f}")
 
-    report_path = settings.runs_dir / f"report_agent_{tag}_{gene.upper()}.json"
+    report_path = settings.runs_dir / f"report_{tag}_{gene.upper()}.json"
     write_report_json(
         {
             "gene": gene,
-            "model": classifier.model,
+            "classifier": classifier,
+            "model": clf.model,
             "evidence": evidence_label,
             "n": report.n_total,
             **{k: getattr(report, k) for k in (
@@ -244,6 +261,7 @@ def evaluate_agent(
     )
     console.print(f"[green]saved[/] predictions → {run_path}")
     console.print(f"[green]saved[/] report → {report_path}")
+    flush_tracing()  # push any buffered Langfuse traces
 
 
 # `majority_label` is imported for parity with baseline reporting/tests.

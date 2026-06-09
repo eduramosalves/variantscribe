@@ -87,13 +87,37 @@ uv run variantscribe evaluate --gene BRCA1 --limit 50 --evidence retrieval   # +
 
 ## Status
 
-🚧 **Phase 1 complete.** Done: data ingestion (ClinVar/gnomAD/PubMed), typed domain
-models, gold-set builder, eval-metrics harness, trivial baselines, the **single-agent LLM
-classifier** (Anthropic tool-use → structured ACMG output, abstain path, concurrent batch,
-token/cost/latency telemetry), and the **two-stage retrieval layer** — PubMed corpus →
-embeddings → LanceDB vector index → cross-encoder rerank, fed to the classifier as
-gene-filtered evidence. 26 tests; the retrieval pipeline and classifier are both covered
-without torch or an API key (a dependency-free hashing embedder + a mocked LLM client).
+🚧 **Phase 2 in progress** (Phase 1 complete). Done: data ingestion (ClinVar/gnomAD/PubMed),
+typed domain models, gold-set builder, eval-metrics harness, trivial baselines, the
+**single-agent LLM classifier** (Anthropic tool-use → structured ACMG output, abstain path,
+concurrent batch, token/cost/latency telemetry), the **two-stage retrieval layer** (PubMed
+corpus → embeddings → LanceDB vector index → cross-encoder rerank), and the **LangGraph
+multi-agent classifier** + a **GitHub Actions CI eval gate**. 45 tests; everything is
+covered without torch or an API key (a dependency-free hashing embedder + a mocked LLM
+client).
+
+### Phase 2 — multi-agent ACMG classifier
+
+Four specialist nodes run **in parallel**, each owning one slice of the ACMG criteria and
+reasoning only over that slice; their criteria are merged and a **deterministic combiner**
+applies the published ACMG rules (Richards et al. 2015) to decide the final tier — a
+transparent, reviewable function, not a black-box model output.
+
+```
+START ─┬─▶ null_variant (PVS1) ──────────────────┐
+       ├─▶ population_frequency (BA1/BS1/BS2/PM2) ─┤
+       ├─▶ computational (PP3/BP4/BP1/BP7) ────────┼─▶ combine (ACMG rules) ─▶ Classification
+       └─▶ functional_literature (PS3/PS1/…) ──────┘
+```
+
+It outputs the same `Classification` type as the single-agent path, so the eval harness,
+baselines, and CI gate guard it unchanged. Pick the classifier with
+`evaluate --classifier agent|graph`. **Langfuse tracing** is wired in (opt-in: a no-op
+unless `VARIANTSCRIBE_LANGFUSE_*` keys are set), giving per-node traces and token costs.
+
+The combiner is conservative by clinical-safety design: any co-occurrence of pathogenic
+**and** benign criteria is flagged *Uncertain* for human review, never silently called
+benign.
 
 **Retrieval design:** a pluggable `Embedder` (production: NCBI **MedCPT** asymmetric
 article/query encoders; fallback: deterministic hashing) and `Reranker` (MedCPT
@@ -102,8 +126,9 @@ data-layer milestone. Retrieval quality is measured *downstream* — classificat
 with `--evidence none` vs `retrieval` vs `retrieval --no-rerank` — rather than via
 unlabelled IR metrics.
 
-Next (Phase 2): run the lift measurement with MedCPT + a real LLM key, then LangGraph
-multi-agent (one node per ACMG criterion) + Langfuse tracing + a CI eval gate.
+The multi-agent classifier (Phase 2) consumes this same retrieval evidence — see the
+multi-agent section below. Remaining: run the agent-vs-graph and evidence-lift measurements
+with MedCPT + a real LLM key.
 
 > **Honest caveat:** the no-evidence run is an LLM-only ablation on a heavily-documented
 > gene (BRCA1), so some apparent skill may reflect training-data familiarity with ClinVar.

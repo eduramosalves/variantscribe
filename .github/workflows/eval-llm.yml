@@ -18,6 +18,11 @@ on:
         default: "none"
         type: choice
         options: ["none", "pubmed", "retrieval"]
+      classifier:
+        description: "Classifier"
+        default: "agent"
+        type: choice
+        options: ["agent", "graph"]
 
 jobs:
   llm-eval:
@@ -57,7 +62,8 @@ jobs:
           uv run variantscribe evaluate \
             --gene ${{ inputs.gene }} \
             --limit ${{ inputs.limit }} \
-            --evidence ${{ inputs.evidence }}
+            --evidence ${{ inputs.evidence }} \
+            --classifier ${{ inputs.classifier }}
 
       - name: Upload report
         if: always()
