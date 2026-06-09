@@ -1,0 +1,30 @@
+{"variant":{"gene":"FIXTURE","variation_id":"0","name":"fix0","hgvs_c":null,"hgvs_p":null,"rsid":null},"gold":"Pathogenic","review_status":"reviewed by expert panel","gold_stars":3,"conditions":[]}
+{"variant":{"gene":"FIXTURE","variation_id":"1","name":"fix1","hgvs_c":null,"hgvs_p":null,"rsid":null},"gold":"Pathogenic","review_status":"reviewed by expert panel","gold_stars":3,"conditions":[]}
+{"variant":{"gene":"FIXTURE","variation_id":"2","name":"fix2","hgvs_c":null,"hgvs_p":null,"rsid":null},"gold":"Pathogenic","review_status":"reviewed by expert panel","gold_stars":3,"conditions":[]}
+{"variant":{"gene":"FIXTURE","variation_id":"3","name":"fix3","hgvs_c":null,"hgvs_p":null,"rsid":null},"gold":"Pathogenic","review_status":"reviewed by expert panel","gold_stars":3,"conditions":[]}
+{"variant":{"gene":"FIXTURE","variation_id":"4","name":"fix4","hgvs_c":null,"hgvs_p":null,"rsid":null},"gold":"Pathogenic","review_status":"reviewed by expert panel","gold_stars":3,"conditions":[]}
+{"variant":{"gene":"FIXTURE","variation_id":"5","name":"fix5","hgvs_c":null,"hgvs_p":null,"rsid":null},"gold":"Pathogenic","review_status":"reviewed by expert panel","gold_stars":3,"conditions":[]}
+{"variant":{"gene":"FIXTURE","variation_id":"6","name":"fix6","hgvs_c":null,"hgvs_p":null,"rsid":null},"gold":"Pathogenic","review_status":"reviewed by expert panel","gold_stars":3,"conditions":[]}
+{"variant":{"gene":"FIXTURE","variation_id":"7","name":"fix7","hgvs_c":null,"hgvs_p":null,"rsid":null},"gold":"Pathogenic","review_status":"reviewed by expert panel","gold_stars":3,"conditions":[]}
+{"variant":{"gene":"FIXTURE","variation_id":"8","name":"fix8","hgvs_c":null,"hgvs_p":null,"rsid":null},"gold":"Pathogenic","review_status":"reviewed by expert panel","gold_stars":3,"conditions":[]}
+{"variant":{"gene":"FIXTURE","variation_id":"9","name":"fix9","hgvs_c":null,"hgvs_p":null,"rsid":null},"gold":"Pathogenic","review_status":"reviewed by expert panel","gold_stars":3,"conditions":[]}
+{"variant":{"gene":"FIXTURE","variation_id":"10","name":"fix10","hgvs_c":null,"hgvs_p":null,"rsid":null},"gold":"Likely pathogenic","review_status":"reviewed by expert panel","gold_stars":3,"conditions":[]}
+{"variant":{"gene":"FIXTURE","variation_id":"11","name":"fix11","hgvs_c":null,"hgvs_p":null,"rsid":null},"gold":"Likely pathogenic","review_status":"reviewed by expert panel","gold_stars":3,"conditions":[]}
+{"variant":{"gene":"FIXTURE","variation_id":"12","name":"fix12","hgvs_c":null,"hgvs_p":null,"rsid":null},"gold":"Likely pathogenic","review_status":"reviewed by expert panel","gold_stars":3,"conditions":[]}
+{"variant":{"gene":"FIXTURE","variation_id":"13","name":"fix13","hgvs_c":null,"hgvs_p":null,"rsid":null},"gold":"Uncertain significance","review_status":"reviewed by expert panel","gold_stars":3,"conditions":[]}
+{"variant":{"gene":"FIXTURE","variation_id":"14","name":"fix14","hgvs_c":null,"hgvs_p":null,"rsid":null},"gold":"Uncertain significance","review_status":"reviewed by expert panel","gold_stars":3,"conditions":[]}
+{"variant":{"gene":"FIXTURE","variation_id":"15","name":"fix15","hgvs_c":null,"hgvs_p":null,"rsid":null},"gold":"Uncertain significance","review_status":"reviewed by expert panel","gold_stars":3,"conditions":[]}
+{"variant":{"gene":"FIXTURE","variation_id":"16","name":"fix16","hgvs_c":null,"hgvs_p":null,"rsid":null},"gold":"Uncertain significance","review_status":"reviewed by expert panel","gold_stars":3,"conditions":[]}
+{"variant":{"gene":"FIXTURE","variation_id":"17","name":"fix17","hgvs_c":null,"hgvs_p":null,"rsid":null},"gold":"Uncertain significance","review_status":"reviewed by expert panel","gold_stars":3,"conditions":[]}
+{"variant":{"gene":"FIXTURE","variation_id":"18","name":"fix18","hgvs_c":null,"hgvs_p":null,"rsid":null},"gold":"Uncertain significance","review_status":"reviewed by expert panel","gold_stars":3,"conditions":[]}
+{"variant":{"gene":"FIXTURE","variation_id":"19","name":"fix19","hgvs_c":null,"hgvs_p":null,"rsid":null},"gold":"Likely benign","review_status":"reviewed by expert panel","gold_stars":3,"conditions":[]}
+{"variant":{"gene":"FIXTURE","variation_id":"20","name":"fix20","hgvs_c":null,"hgvs_p":null,"rsid":null},"gold":"Likely benign","review_status":"reviewed by expert panel","gold_stars":3,"conditions":[]}
+{"variant":{"gene":"FIXTURE","variation_id":"21","name":"fix21","hgvs_c":null,"hgvs_p":null,"rsid":null},"gold":"Likely benign","review_status":"reviewed by expert panel","gold_stars":3,"conditions":[]}
+{"variant":{"gene":"FIXTURE","variation_id":"22","name":"fix22","hgvs_c":null,"hgvs_p":null,"rsid":null},"gold":"Likely benign","review_status":"reviewed by expert panel","gold_stars":3,"conditions":[]}
+{"variant":{"gene":"FIXTURE","variation_id":"23","name":"fix23","hgvs_c":null,"hgvs_p":null,"rsid":null},"gold":"Likely benign","review_status":"reviewed by expert panel","gold_stars":3,"conditions":[]}
+{"variant":{"gene":"FIXTURE","variation_id":"24","name":"fix24","hgvs_c":null,"hgvs_p":null,"rsid":null},"gold":"Benign","review_status":"reviewed by expert panel","gold_stars":3,"conditions":[]}
+{"variant":{"gene":"FIXTURE","variation_id":"25","name":"fix25","hgvs_c":null,"hgvs_p":null,"rsid":null},"gold":"Benign","review_status":"reviewed by expert panel","gold_stars":3,"conditions":[]}
+{"variant":{"gene":"FIXTURE","variation_id":"26","name":"fix26","hgvs_c":null,"hgvs_p":null,"rsid":null},"gold":"Benign","review_status":"reviewed by expert panel","gold_stars":3,"conditions":[]}
+{"variant":{"gene":"FIXTURE","variation_id":"27","name":"fix27","hgvs_c":null,"hgvs_p":null,"rsid":null},"gold":"Benign","review_status":"reviewed by expert panel","gold_stars":3,"conditions":[]}
+{"variant":{"gene":"FIXTURE","variation_id":"28","name":"fix28","hgvs_c":null,"hgvs_p":null,"rsid":null},"gold":"Benign","review_status":"reviewed by expert panel","gold_stars":3,"conditions":[]}
+{"variant":{"gene":"FIXTURE","variation_id":"29","name":"fix29","hgvs_c":null,"hgvs_p":null,"rsid":null},"gold":"Benign","review_status":"reviewed by expert panel","gold_stars":3,"conditions":[]}

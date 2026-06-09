@@ -1,5 +1,9 @@
 # 🧬 VariantScribe
 
+[![CI](https://github.com/eduramosalves/variantscribe/actions/workflows/ci.yml/badge.svg)](https://github.com/eduramosalves/variantscribe/actions/workflows/ci.yml)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+
 **An agentic clinical variant interpretation copilot.** Given a genetic variant,
 VariantScribe drafts an [ACMG/AMP](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4544753/)
 pathogenicity classification — *Pathogenic → Benign* — backed by a cited evidence trail,

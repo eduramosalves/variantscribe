@@ -1,0 +1,68 @@
+name: LLM eval (manual)
+
+# On-demand only — never runs on a PR, so model spend is always explicit.
+# Requires a repository secret: ANTHROPIC_API_KEY (optional: NCBI_EMAIL, NCBI_API_KEY).
+on:
+  workflow_dispatch:
+    inputs:
+      gene:
+        description: "Gene symbol"
+        default: "BRCA1"
+        type: string
+      limit:
+        description: "Stratified sample size"
+        default: "30"
+        type: string
+      evidence:
+        description: "Evidence source"
+        default: "none"
+        type: choice
+        options: ["none", "pubmed", "retrieval"]
+
+jobs:
+  llm-eval:
+    name: classify + score ${{ inputs.gene }}
+    runs-on: ubuntu-latest
+    env:
+      VARIANTSCRIBE_ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      VARIANTSCRIBE_NCBI_EMAIL: ${{ secrets.NCBI_EMAIL || 'ci@example.com' }}
+      VARIANTSCRIBE_NCBI_API_KEY: ${{ secrets.NCBI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Guard — require API key
+        run: |
+          if [ -z "${VARIANTSCRIBE_ANTHROPIC_API_KEY}" ]; then
+            echo "::error::Set the ANTHROPIC_API_KEY repository secret to run this workflow."
+            exit 1
+          fi
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+
+      - name: Sync dependencies
+        run: uv sync --extra agent --extra retrieval
+
+      - name: Build gold set
+        run: uv run variantscribe build-gold --gene ${{ inputs.gene }} --min-stars 2
+
+      - name: Build retrieval index (hashing)
+        if: ${{ inputs.evidence == 'retrieval' }}
+        run: uv run variantscribe build-index --gene ${{ inputs.gene }} --embedder hashing --max-articles 300
+
+      - name: Evaluate
+        run: |
+          uv run variantscribe evaluate \
+            --gene ${{ inputs.gene }} \
+            --limit ${{ inputs.limit }} \
+            --evidence ${{ inputs.evidence }}
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-report-${{ inputs.gene }}
+          path: data/runs/report_*.json
+          if-no-files-found: ignore
