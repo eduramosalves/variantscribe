@@ -19,12 +19,16 @@ class Retriever:
         *,
         k_dense: int = 20,
         k_final: int = 5,
+        source: str = "pubmed",
+        kind: str = "literature",
     ) -> None:
         self.embedder = embedder
         self.index = index
         self.reranker = reranker
         self.k_dense = k_dense
         self.k_final = k_final
+        self.source = source
+        self.kind = kind
 
     def retrieve(self, query: str, *, gene: str | None = None) -> list[EvidenceItem]:
         qvec = self.embedder.embed_queries([query])[0]
@@ -49,8 +53,8 @@ class Retriever:
                 score = None
             items.append(
                 EvidenceItem(
-                    source="pubmed",
-                    kind="literature",
+                    source=self.source,
+                    kind=self.kind,
                     text=h["text"],
                     citation=h.get("citation") or None,
                     score=score,

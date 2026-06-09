@@ -34,6 +34,9 @@ class Settings(BaseSettings):
     query_embedding_model: str = "ncbi/MedCPT-Query-Encoder"
     reranker_model: str = "ncbi/MedCPT-Cross-Encoder"
 
+    # ColPali visual document retrieval (guideline PDFs).
+    colpali_model: str = "vidore/colpali-v1.3"
+
     # Filesystem.
     data_dir: Path = Field(default=Path("./data"))
 

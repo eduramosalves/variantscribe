@@ -87,14 +87,36 @@ uv run variantscribe evaluate --gene BRCA1 --limit 50 --evidence retrieval   # +
 
 ## Status
 
-🚧 **Phase 2 in progress** (Phase 1 complete). Done: data ingestion (ClinVar/gnomAD/PubMed),
-typed domain models, gold-set builder, eval-metrics harness, trivial baselines, the
+🚧 **Phase 3 in progress** (Phases 1–2 complete). Done: data ingestion (ClinVar/gnomAD/
+PubMed), typed domain models, gold-set builder, eval-metrics harness, trivial baselines, the
 **single-agent LLM classifier** (Anthropic tool-use → structured ACMG output, abstain path,
 concurrent batch, token/cost/latency telemetry), the **two-stage retrieval layer** (PubMed
-corpus → embeddings → LanceDB vector index → cross-encoder rerank), and the **LangGraph
-multi-agent classifier** + a **GitHub Actions CI eval gate**. 45 tests; everything is
+corpus → embeddings → LanceDB vector index → cross-encoder rerank), the **LangGraph
+multi-agent classifier**, a **GitHub Actions CI eval gate**, **calibration analysis** (ECE +
+reliability bins), and **visual guideline-PDF retrieval** (ColPali). 58 tests; everything is
 covered without torch or an API key (a dependency-free hashing embedder + a mocked LLM
-client).
+client + a synthetic PDF fixture).
+
+### Phase 3 — guideline-PDF (visual) retrieval + calibration
+
+ACMG/VCEP guideline PDFs are ingested page-by-page and retrieved as evidence alongside the
+literature, via two interchangeable backends:
+
+- **text** — page text-layer → LanceDB (dependency-free; runs anywhere).
+- **colpali** — page *image* → ColPali multi-vector → **MaxSim late interaction**, so
+  layout, tables, and figures are searchable, not just the text layer. (`colpali` extra.)
+
+```bash
+uv run variantscribe build-guidelines --pdf-dir ./guidelines --embedder text   # or colpali
+uv run variantscribe evaluate --gene BRCA1 --evidence retrieval --guidelines
+```
+
+No copyrighted guideline PDFs are committed — point `--pdf-dir` at PDFs you hold a licence to.
+The eval harness now also reports **Expected Calibration Error** and a reliability table:
+does the classifier's confidence track its real accuracy?
+
+Remaining (Phase 3): a thin review UI, and committing real agent-vs-graph / evidence-lift /
+calibration numbers (needs an API key + the MedCPT/ColPali extras).
 
 ### Phase 2 — multi-agent ACMG classifier
 

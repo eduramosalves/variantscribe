@@ -41,10 +41,21 @@ graph = [
     "langgraph>=0.2",
     "langfuse>=2.0",
 ]
+# Phase 3: guideline PDF ingestion (render pages + extract text). Light, no system deps.
+visual = [
+    "pypdfium2>=4",
+    "pillow>=10",
+]
+# Phase 3: ColPali visual late-interaction page retrieval (pulls torch). Production path.
+colpali = [
+    "colpali-engine>=0.3",
+    "torch>=2.2",
+]
 dev = [
     "pytest>=8.2",
     "pytest-asyncio>=0.23",
     "ruff>=0.5",
+    "fpdf2>=2.7",
 ]
 
 [project.scripts]

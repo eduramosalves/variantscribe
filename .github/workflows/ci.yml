@@ -29,7 +29,7 @@ jobs:
       # No torch / no API key needed: the hashing embedder and a mocked Anthropic
       # client cover the retrieval pipeline and the classifier in tests.
       - name: Sync dependencies
-        run: uv sync --extra dev --extra retrieval --extra agent --extra graph --python ${{ matrix.python-version }}
+        run: uv sync --extra dev --extra retrieval --extra agent --extra graph --extra visual --python ${{ matrix.python-version }}
 
       - name: Ruff (lint)
         run: uv run ruff check src tests scripts

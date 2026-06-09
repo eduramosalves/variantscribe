@@ -67,3 +67,16 @@ def retrieval_evidence_fn(retriever) -> EvidenceFn:
         return retriever.retrieve(_variant_query(variant), gene=variant.gene.upper())
 
     return fn
+
+
+def combined_evidence_fn(*fns: EvidenceFn | None) -> EvidenceFn:
+    """Concatenate evidence from several providers (e.g. literature + guideline pages)."""
+    active = [f for f in fns if f is not None]
+
+    def fn(variant: Variant) -> list[EvidenceItem]:
+        items: list[EvidenceItem] = []
+        for f in active:
+            items.extend(f(variant))
+        return items
+
+    return fn

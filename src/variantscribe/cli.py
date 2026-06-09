@@ -132,11 +132,33 @@ def build_index_cmd(
     )
 
 
+@app.command("build-guidelines")
+def build_guidelines_cmd(
+    pdf_dir: str = typer.Option(..., "--pdf-dir", help="Folder of guideline PDFs you hold"),
+    embedder: str = typer.Option("text", "--embedder", help="text | colpali"),
+    render_dpi: int = typer.Option(120, "--dpi"),
+) -> None:
+    """Index ACMG/VCEP guideline PDFs for visual document retrieval."""
+    from variantscribe.retrieval.guidelines import build_guideline_index
+
+    console.print(f"Indexing guideline PDFs in [cyan]{pdf_dir}[/] ([cyan]{embedder}[/])…")
+    try:
+        meta = build_guideline_index(pdf_dir, embedder=embedder, render_dpi=render_dpi)
+    except (RuntimeError, FileNotFoundError) as exc:
+        console.print(f"[red]{exc}[/]")
+        raise typer.Exit(1) from exc
+    console.print(
+        f"[green]indexed[/] {meta['n_pages']} pages from {len(meta['docs'])} docs "
+        f"· dim={meta['dim']} → {settings.index_dir}"
+    )
+
+
 @app.command("evaluate")
 def evaluate_agent(
     gene: str = typer.Option(..., "--gene", "-g"),
     limit: int | None = typer.Option(None, "--limit", help="Stratified sample size"),
     evidence: str = typer.Option("none", "--evidence", help="none | pubmed | retrieval"),
+    guidelines: bool = typer.Option(False, "--guidelines", help="Add guideline-PDF evidence"),
     rerank: bool = typer.Option(True, "--rerank/--no-rerank", help="Cross-encoder rerank"),
     k: int = typer.Option(5, "--k", help="Evidence passages passed to the classifier"),
     classifier: str = typer.Option("agent", "--classifier", help="agent | graph"),
@@ -146,7 +168,11 @@ def evaluate_agent(
 ) -> None:
     """Run the LLM classifier over GENE's gold set, score it, and report cost."""
     from variantscribe.agent.classifier import LLMClassifier, classify_batch
-    from variantscribe.agent.evidence import pubmed_evidence, retrieval_evidence_fn
+    from variantscribe.agent.evidence import (
+        combined_evidence_fn,
+        pubmed_evidence,
+        retrieval_evidence_fn,
+    )
     from variantscribe.agent.telemetry import summarize_run
     from variantscribe.agent.tracing import flush as flush_tracing
     from variantscribe.agent.tracing import tracing_enabled
@@ -177,6 +203,20 @@ def evaluate_agent(
     elif evidence != "none":
         console.print(f"[red]Unknown --evidence {evidence!r}[/] (none | pubmed | retrieval)")
         raise typer.Exit(1)
+
+    if guidelines:
+        from variantscribe.retrieval.guidelines import (
+            guideline_evidence_fn,
+            load_guideline_retriever,
+        )
+
+        try:
+            gl_retriever = load_guideline_retriever(k_final=3)
+        except FileNotFoundError as exc:
+            console.print(f"[red]{exc}[/]")
+            raise typer.Exit(1) from exc
+        evidence_fn = combined_evidence_fn(evidence_fn, guideline_evidence_fn(gl_retriever))
+        evidence_label += "+guidelines"
 
     # `graph` is the LangGraph multi-agent classifier; it gathers evidence internally,
     # so we hand the evidence_fn to it and pass None to classify_batch.
@@ -250,7 +290,7 @@ def evaluate_agent(
             "n": report.n_total,
             **{k: getattr(report, k) for k in (
                 "coverage", "accuracy", "macro_f1", "three_class_accuracy",
-                "ordinal_mae", "dangerous_errors", "dangerous_error_rate",
+                "ordinal_mae", "dangerous_errors", "dangerous_error_rate", "ece",
             )},
             "majority_macro_f1": floor.macro_f1,
             "est_cost_usd": telem.est_cost_usd,

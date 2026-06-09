@@ -17,6 +17,7 @@ from dataclasses import dataclass, field
 
 from sklearn.metrics import f1_score
 
+from variantscribe.eval.calibration import expected_calibration_error
 from variantscribe.models import CLINSIG_ORDINAL, ClinSig, EvalCase
 
 # Clinically actionable 3-way collapse of the 5-tier scale.
@@ -43,6 +44,7 @@ class EvalReport:
     ordinal_mae: float
     dangerous_errors: int  # gold (L)Pathogenic, predicted (L)Benign
     dangerous_error_rate: float
+    ece: float | None = None  # expected calibration error
     confusion: dict[str, dict[str, int]] = field(default_factory=dict)
     calibration: list[tuple[str, int, float]] = field(default_factory=list)
 
@@ -57,7 +59,9 @@ class EvalReport:
             f"ordinal MAE:      {self.ordinal_mae:.3f}",
             f"dangerous errors: {self.dangerous_errors} "
             f"({self.dangerous_error_rate:.1%} of answered)",
-        ]
+        ] + (
+            [f"ECE (calibration):{self.ece:.3f}"] if self.ece is not None else []
+        )
 
 
 def evaluate(cases: list[EvalCase]) -> EvalReport:
@@ -122,6 +126,7 @@ def evaluate(cases: list[EvalCase]) -> EvalReport:
         ordinal_mae=ordinal_mae,
         dangerous_errors=dangerous,
         dangerous_error_rate=dangerous / n_answered,
+        ece=expected_calibration_error(answered),
         confusion=confusion,
         calibration=_calibration(answered),
     )
